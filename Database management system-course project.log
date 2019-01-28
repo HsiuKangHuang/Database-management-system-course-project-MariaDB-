@@ -1,0 +1,663 @@
+MariaDB [cosmetics]> USE cosmetics
+Database changed
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q1 using AND OR NOT
+MariaDB [cosmetics]> SELECT * FROM sunscreen
+    -> WHERE (BrandID='JP-0001' OR BrandID='JP-0002') AND Price='950NT' 
+    ->       AND NOT ProductName='ANESSA-GOLD';
++-----------+-----------------+-------+----------------------------+---------+--------------+
+| ProductID | ProductName     | Price | First_Generation_ProductID | BrandID | EndorserName |
++-----------+-----------------+-------+----------------------------+---------+--------------+
+| A00002    | ANESSA-MildMilk | 950NT | A00001                     | JP-0001 | HIKARI MORI  |
+| A00003    | ANESSA-SILVER   | 950NT | A00001                     | JP-0001 | HIKARI MORI  |
++-----------+-----------------+-------+----------------------------+---------+--------------+
+2 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q2 projection
+MariaDB [cosmetics]> SELECT ProductID, ProductName FROM sunscreen
+    -> WHERE BrandID='JP-0001';
++-----------+-----------------+
+| ProductID | ProductName     |
++-----------+-----------------+
+| A00001    | ANESSA-GOLD     |
+| A00002    | ANESSA-MildMilk |
+| A00003    | ANESSA-SILVER   |
++-----------+-----------------+
+3 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q3 RENAME
+MariaDB [cosmetics]> SELECT ProductID AS ID,ProductName AS Product, Price AS The_Price,
+    ->        First_Generation_ProductID AS  First_Generation_Product_ID, BrandID AS Brand_ID,
+    ->        EndorserName AS Endorser_Name
+    -> FROM  sunscreen AS Sunscreen_DB
+    -> WHERE BrandID='JP-0001';
++--------+-----------------+-----------+-----------------------------+----------+---------------+
+| ID     | Product         | The_Price | First_Generation_Product_ID | Brand_ID | Endorser_Name |
++--------+-----------------+-----------+-----------------------------+----------+---------------+
+| A00001 | ANESSA-GOLD     | 950NT     | NULL                        | JP-0001  | HIKARI MORI   |
+| A00002 | ANESSA-MildMilk | 950NT     | A00001                      | JP-0001  | HIKARI MORI   |
+| A00003 | ANESSA-SILVER   | 950NT     | A00001                      | JP-0001  | HIKARI MORI   |
++--------+-----------------+-----------+-----------------------------+----------+---------------+
+3 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q4 UNION
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Create table liquid foundation
+MariaDB [cosmetics]> CREATE TABLE Liquid_Foundation
+    -> ( ProductID    CHAR(9) DEFAULT 'B00000',
+    ->   ProductName  CHAR(50) DEFAULT 'XXXXX',	
+    ->   Price        CHAR(10) DEFAULT '0NT',
+    ->   PRIMARY KEY (ProductID)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+MariaDB [cosmetics]> -- Insert values of Table Liquid_fundation
+MariaDB [cosmetics]> INSERT INTO Liquid_Foundation (ProductID,ProductName,Price) VALUES ('B00001','Double Wear','1900NT');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Liquid_Foundation (ProductID,ProductName,Price) VALUES ('B00002','The Lightbulb','2200NT');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Liquid_Foundation (ProductID,ProductName,Price) VALUES ('B00003','GA_Luminous Silk','2100NT');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Liquid_Foundation (ProductID,ProductName,Price) VALUES ('B00004','Lancome Tient Mracle ','1950NT');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Liquid_Foundation (ProductID,ProductName,Price) VALUES ('B00005','Maquillage Sheer and Perfect','1400NT');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Liquid_Foundation (ProductID,ProductName,Price) VALUES ('B00006','Maquillage Synchro Skin Lasting','1400NT');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT ProductName, Price FROM sunscreen
+    -> WHERE Price>700
+    -> UNION
+    -> SELECT ProductName, Price FROM Liquid_Foundation
+    -> WHERE Price>2000;
++------------------+--------+
+| ProductName      | Price  |
++------------------+--------+
+| ANESSA-GOLD      | 950NT  |
+| ANESSA-MildMilk  | 950NT  |
+| ANESSA-SILVER    | 950NT  |
+| The Lightbulb    | 2200NT |
+| GA_Luminous Silk | 2100NT |
++------------------+--------+
+5 rows in set, 11 warnings (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q5  equal join
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- Insert values of Table Brands
+MariaDB [cosmetics]> INSERT INTO Brands (BrandID,BrandName,BrandCountry) VALUES ('US-0001','Estee Lauder','US');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Brands (BrandID,BrandName,BrandCountry) VALUES ('JP-0004','Shu Uemura','JAPAN'); 
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Brands (BrandID,BrandName,BrandCountry) VALUES ('IT-0001','Giorgio Armani','ITALY');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO Brands (BrandID,BrandName,BrandCountry) VALUES ('FR-0001','Lancome','FRANCE');
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- 1-N relationship Having - brands<->liquid foundation
+MariaDB [cosmetics]> ALTER TABLE Liquid_Foundation
+    -> ADD BrandID CHAR(9) DEFAULT NULL;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> ALTER TABLE liquid_foundation
+    -> ADD CONSTRAINT FK_Brands_Liquid_Foundation
+    -> FOREIGN KEY (BrandID) REFERENCES brands(BrandID);
+Query OK, 6 rows affected (0.03 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET BrandID = 'JP-0001'
+    -> WHERE ProductID = 'B00005'OR ProductID = 'B00006' ;
+Query OK, 2 rows affected (0.00 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET BrandID = 'US-0001'
+    -> WHERE ProductID = 'B00001';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET BrandID = 'JP-0004'
+    -> WHERE ProductID ='B00002';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET BrandID = 'IT-0001'
+    -> WHERE ProductID = 'B00003';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET BrandID = 'FR-0001'
+    -> WHERE ProductID = 'B00004';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- equal join of same brand_id
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT liquid_foundation.ProductName, sunscreen.ProductName, liquid_foundation.BrandID 
+    -> FROM   liquid_foundation
+    -> JOIN   sunscreen ON liquid_foundation.brandID=sunscreen.BrandID;
++---------------------------------+-----------------+---------+
+| ProductName                     | ProductName     | BrandID |
++---------------------------------+-----------------+---------+
+| Maquillage Sheer and Perfect    | ANESSA-GOLD     | JP-0001 |
+| Maquillage Synchro Skin Lasting | ANESSA-GOLD     | JP-0001 |
+| Maquillage Sheer and Perfect    | ANESSA-MildMilk | JP-0001 |
+| Maquillage Synchro Skin Lasting | ANESSA-MildMilk | JP-0001 |
+| Maquillage Sheer and Perfect    | ANESSA-SILVER   | JP-0001 |
+| Maquillage Synchro Skin Lasting | ANESSA-SILVER   | JP-0001 |
++---------------------------------+-----------------+---------+
+6 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q6 natural join
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT sunscreen.ProductName, sunscreen.brandID, brands.BrandName
+    -> FROM sunscreen
+    -> NATURAL JOIN brands;
++--------------------+---------+-----------+
+| ProductName        | brandID | BrandName |
++--------------------+---------+-----------+
+| ANESSA-GOLD        | JP-0001 | SHISEIDO  |
+| ANESSA-MildMilk    | JP-0001 | SHISEIDO  |
+| ANESSA-SILVER      | JP-0001 | SHISEIDO  |
+| UV-cut             | JP-0002 | ORBIS     |
+| UV Protection Milk | JP-0003 | Kao       |
++--------------------+---------+-----------+
+5 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q7 theta join
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- ALTER sunscreen.Price & liquid foundation data type to int 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET Price=950
+    -> WHERE BrandID='JP-0001';
+Query OK, 3 rows affected (0.00 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET Price=620
+    -> WHERE BrandID='JP-0002';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET Price=650
+    -> WHERE BrandID='JP-0003';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> ALTER TABLE sunscreen
+    -> MODIFY COLUMN Price INT(1);
+Query OK, 5 rows affected (0.02 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET Price=1900
+    -> WHERE BrandID='US-0001';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET Price=2200
+    -> WHERE BrandID='JP-0004';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET Price=2100
+    -> WHERE BrandID='IT-0001';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET Price=1950
+    -> WHERE BrandID='FR-0001';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE liquid_foundation
+    -> SET Price=1400
+    -> WHERE BrandID='JP-0001';
+Query OK, 2 rows affected (0.00 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> ALTER TABLE liquid_foundation
+    -> MODIFY COLUMN Price INT(1);
+Query OK, 6 rows affected (0.02 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- THETA JOIN
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT liquid_foundation.ProductName, sunscreen.ProductName
+    -> FROM   liquid_foundation
+    -> JOIN   sunscreen ON liquid_foundation.Price>sunscreen.Price;
++---------------------------------+--------------------+
+| ProductName                     | ProductName        |
++---------------------------------+--------------------+
+| Double Wear                     | ANESSA-GOLD        |
+| The Lightbulb                   | ANESSA-GOLD        |
+| GA_Luminous Silk                | ANESSA-GOLD        |
+| Lancome Tient Mracle            | ANESSA-GOLD        |
+| Maquillage Sheer and Perfect    | ANESSA-GOLD        |
+| Maquillage Synchro Skin Lasting | ANESSA-GOLD        |
+| Double Wear                     | ANESSA-MildMilk    |
+| The Lightbulb                   | ANESSA-MildMilk    |
+| GA_Luminous Silk                | ANESSA-MildMilk    |
+| Lancome Tient Mracle            | ANESSA-MildMilk    |
+| Maquillage Sheer and Perfect    | ANESSA-MildMilk    |
+| Maquillage Synchro Skin Lasting | ANESSA-MildMilk    |
+| Double Wear                     | ANESSA-SILVER      |
+| The Lightbulb                   | ANESSA-SILVER      |
+| GA_Luminous Silk                | ANESSA-SILVER      |
+| Lancome Tient Mracle            | ANESSA-SILVER      |
+| Maquillage Sheer and Perfect    | ANESSA-SILVER      |
+| Maquillage Synchro Skin Lasting | ANESSA-SILVER      |
+| Double Wear                     | UV-cut             |
+| The Lightbulb                   | UV-cut             |
+| GA_Luminous Silk                | UV-cut             |
+| Lancome Tient Mracle            | UV-cut             |
+| Maquillage Sheer and Perfect    | UV-cut             |
+| Maquillage Synchro Skin Lasting | UV-cut             |
+| Double Wear                     | UV Protection Milk |
+| The Lightbulb                   | UV Protection Milk |
+| GA_Luminous Silk                | UV Protection Milk |
+| Lancome Tient Mracle            | UV Protection Milk |
+| Maquillage Sheer and Perfect    | UV Protection Milk |
+| Maquillage Synchro Skin Lasting | UV Protection Milk |
++---------------------------------+--------------------+
+30 rows in set (0.01 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q8 Join three tables
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- CREATE table primer 
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> CREATE TABLE primer 
+    -> ( ProductID    CHAR(9) DEFAULT 'c00000',
+    ->   ProductName  CHAR(50) DEFAULT 'XXXXX',	
+    ->   Price        INT(1),
+    ->   PRIMARY KEY (ProductID)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+MariaDB [cosmetics]> -- Insert values of Table Liquid_fundation
+MariaDB [cosmetics]> INSERT INTO primer (ProductID,ProductName,Price) VALUES ('C00001','Sofina Primavista Ange',350);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO primer (ProductID,ProductName,Price) VALUES ('C00002','Sofina Primavista',850);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO primer (ProductID,ProductName,Price) VALUES ('C00003','Maquillage Pre-makeup',900);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO primer (ProductID,ProductName,Price) VALUES ('C00004','GA_Master Primer ', 1950);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- 1-N relationship Having - brands<->primer
+MariaDB [cosmetics]> ALTER TABLE primer
+    -> ADD BrandID CHAR(9) DEFAULT NULL;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> ALTER TABLE primer
+    -> ADD CONSTRAINT FK_Brands_primer
+    -> FOREIGN KEY (BrandID) REFERENCES brands(BrandID);
+Query OK, 4 rows affected (0.02 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE primer
+    -> SET BrandID = 'JP-0003'
+    -> WHERE ProductID = 'C00001'OR ProductID = 'C00002' ;
+Query OK, 2 rows affected (0.00 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE primer
+    -> SET BrandID = 'JP-0001'
+    -> WHERE ProductID = 'C00003';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE primer
+    -> SET BrandID = 'IT-0001'
+    -> WHERE ProductID ='C00004';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- join three tables 
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT sunscreen.ProductName, primer.ProductName, liquid_foundation.ProductName, primer.brandID
+    -> FROM sunscreen, primer, liquid_foundation
+    -> WHERE sunscreen.BrandID='JP-0001' 
+    ->       AND Primer.brandID=sunscreen.BrandID 
+    ->       AND liquid_foundation.BrandID=sunscreen.BrandID;
++-----------------+-----------------------+---------------------------------+---------+
+| ProductName     | ProductName           | ProductName                     | brandID |
++-----------------+-----------------------+---------------------------------+---------+
+| ANESSA-GOLD     | Maquillage Pre-makeup | Maquillage Sheer and Perfect    | JP-0001 |
+| ANESSA-GOLD     | Maquillage Pre-makeup | Maquillage Synchro Skin Lasting | JP-0001 |
+| ANESSA-MildMilk | Maquillage Pre-makeup | Maquillage Sheer and Perfect    | JP-0001 |
+| ANESSA-MildMilk | Maquillage Pre-makeup | Maquillage Synchro Skin Lasting | JP-0001 |
+| ANESSA-SILVER   | Maquillage Pre-makeup | Maquillage Sheer and Perfect    | JP-0001 |
+| ANESSA-SILVER   | Maquillage Pre-makeup | Maquillage Synchro Skin Lasting | JP-0001 |
++-----------------+-----------------------+---------------------------------+---------+
+6 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q9 MIN MAX COUNT
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> -- Insert values of Table sunscreen
+MariaDB [cosmetics]> ALTER TABLE sunscreen
+    -> MODIFY COLUMN ProductName CHAR(50) DEFAULT NULL;
+Query OK, 5 rows affected (0.02 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET ProductName = 'Curel-UV protection milk'
+    -> WHERE ProductID ='A00005';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00006','ANESSA-perfect UV skincare gel',790);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00007','ANESSA-spray sunscreen aqua booster',600);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00008','UV-cut sunscreen freence',500);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00009','UV-cut sunscreen gel',500);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00010','Curel-UV protection face milk',650);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00011','Biore UV aqua rich watery essence',219);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> INSERT INTO sunscreen (ProductID,ProductName,Price) VALUES ('A00012','Biore UV aqua rich watery gel',225);
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET BrandID = 'JP-0001'
+    -> WHERE ProductID ='A00006' OR ProductID ='A00007' ;
+Query OK, 2 rows affected (0.00 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET BrandID = 'JP-0002'
+    -> WHERE ProductID ='A00008' OR ProductID ='A00009' ;
+Query OK, 2 rows affected (0.00 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> UPDATE sunscreen
+    -> SET BrandID = 'JP-0003'
+    -> WHERE ProductID ='A00010' OR ProductID ='A00011' OR ProductID='A00012' ;
+Query OK, 3 rows affected (0.00 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Group by max min count
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT MIN(Price) AS min_price, MAX(Price) AS max_price, COUNT(BrandID) AS COUNT,
+    ->        BrandID
+    -> FROM sunscreen
+    -> GROUP BY BrandID;
++-----------+-----------+-------+---------+
+| min_price | max_price | COUNT | BrandID |
++-----------+-----------+-------+---------+
+|       600 |       950 |     5 | JP-0001 |
+|       500 |       620 |     3 | JP-0002 |
+|       219 |       650 |     4 | JP-0003 |
++-----------+-----------+-------+---------+
+3 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q9 AVG SUM COUNT
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT AVG(Price) AS average_price, SUM(Price) AS sum_price, COUNT(BrandID) AS COUNT,
+    ->        BrandID
+    -> FROM sunscreen
+    -> GROUP BY BrandID;
++---------------+-----------+-------+---------+
+| average_price | sum_price | COUNT | BrandID |
++---------------+-----------+-------+---------+
+| 848.0000      | 4240      |     5 | JP-0001 |
+| 540.0000      | 1620      |     3 | JP-0002 |
+| 436.0000      | 1744      |     4 | JP-0003 |
++---------------+-----------+-------+---------+
+3 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q10 IN explicit
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT BrandName, BrandCountry
+    -> FROM brands
+    -> WHERE BrandCountry IN ('JAPAN','US','ITALY');
++----------------+--------------+
+| BrandName      | BrandCountry |
++----------------+--------------+
+| Giorgio Armani | ITALY        |
+| SHISEIDO       | JAPAN        |
+| ORBIS          | JAPAN        |
+| Kao            | JAPAN        |
+| Shu Uemura     | JAPAN        |
+| Estee Lauder   | US           |
++----------------+--------------+
+6 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q11 IN dynamic
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT BrandName, BrandCountry
+    -> FROM brands
+    -> WHERE BrandCountry IN 
+    ->     ( SELECT BrandCountry 
+    -> 	  FROM brands 
+    -> 	  WHERE BrandID='JP-0001' OR BrandID='US-0001' OR BrandID='IT-0001');
++----------------+--------------+
+| BrandName      | BrandCountry |
++----------------+--------------+
+| Giorgio Armani | ITALY        |
+| SHISEIDO       | JAPAN        |
+| ORBIS          | JAPAN        |
+| Kao            | JAPAN        |
+| Shu Uemura     | JAPAN        |
+| Estee Lauder   | US           |
++----------------+--------------+
+6 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q12 nest query IN
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT BrandCountry AS BrandCountry_most_expensive
+    -> FROM brands
+    -> WHERE BrandID IN
+    ->     ( SELECT BrandID
+    ->       FROM sunscreen
+    ->       WHERE price IN 
+    ->           ( SELECT MAX(Price)
+    ->             FROM sunscreen
+    ->           )
+    -> 
+    ->     );
++-----------------------------+
+| BrandCountry_most_expensive |
++-----------------------------+
+| JAPAN                       |
++-----------------------------+
+1 row in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q13 nest query EXIST
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT BrandID
+    -> FROM  liquid_foundation
+    -> WHERE EXISTS 
+    ->       ( SELECT ProductName
+    ->         FROM brands
+    ->         WHERE price>1500 
+    ->       ); 
++---------+
+| BrandID |
++---------+
+| US-0001 |
+| JP-0004 |
+| IT-0001 |
+| FR-0001 |
++---------+
+4 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q14 left join
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT liquid_foundation.ProductID, sunscreen.ProductID,
+    ->        liquid_foundation.BrandID AS L_BrandID
+    -> FROM   liquid_foundation
+    -> LEFT JOIN   sunscreen 
+    ->        ON liquid_foundation.BrandID=sunscreen.BrandID;
++-----------+-----------+-----------+
+| ProductID | ProductID | L_BrandID |
++-----------+-----------+-----------+
+| B00004    | NULL      | FR-0001   |
+| B00003    | NULL      | IT-0001   |
+| B00005    | A00001    | JP-0001   |
+| B00005    | A00002    | JP-0001   |
+| B00005    | A00003    | JP-0001   |
+| B00005    | A00006    | JP-0001   |
+| B00005    | A00007    | JP-0001   |
+| B00006    | A00001    | JP-0001   |
+| B00006    | A00002    | JP-0001   |
+| B00006    | A00003    | JP-0001   |
+| B00006    | A00006    | JP-0001   |
+| B00006    | A00007    | JP-0001   |
+| B00002    | NULL      | JP-0004   |
+| B00001    | NULL      | US-0001   |
++-----------+-----------+-----------+
+14 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q15  full outer join
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT liquid_foundation.ProductID, sunscreen.ProductID,
+    ->        liquid_foundation.BrandID, sunscreen.BrandID AS S_BrandID
+    -> FROM   liquid_foundation
+    -> LEFT JOIN  sunscreen ON liquid_foundation.BrandID=sunscreen.BrandID
+    -> UNION 
+    -> SELECT liquid_foundation.ProductID, sunscreen.ProductID,
+    ->        liquid_foundation.BrandID, sunscreen.BrandID AS S_BrandID
+    -> FROM   liquid_foundation
+    -> RIGHT JOIN  sunscreen ON liquid_foundation.BrandID=sunscreen.BrandID;
++-----------+-----------+---------+-----------+
+| ProductID | ProductID | BrandID | S_BrandID |
++-----------+-----------+---------+-----------+
+| B00004    | NULL      | FR-0001 | NULL      |
+| B00003    | NULL      | IT-0001 | NULL      |
+| B00005    | A00001    | JP-0001 | JP-0001   |
+| B00005    | A00002    | JP-0001 | JP-0001   |
+| B00005    | A00003    | JP-0001 | JP-0001   |
+| B00005    | A00006    | JP-0001 | JP-0001   |
+| B00005    | A00007    | JP-0001 | JP-0001   |
+| B00006    | A00001    | JP-0001 | JP-0001   |
+| B00006    | A00002    | JP-0001 | JP-0001   |
+| B00006    | A00003    | JP-0001 | JP-0001   |
+| B00006    | A00006    | JP-0001 | JP-0001   |
+| B00006    | A00007    | JP-0001 | JP-0001   |
+| B00002    | NULL      | JP-0004 | NULL      |
+| B00001    | NULL      | US-0001 | NULL      |
+| NULL      | A00004    | NULL    | JP-0002   |
+| NULL      | A00008    | NULL    | JP-0002   |
+| NULL      | A00009    | NULL    | JP-0002   |
+| NULL      | A00005    | NULL    | JP-0003   |
+| NULL      | A00010    | NULL    | JP-0003   |
+| NULL      | A00011    | NULL    | JP-0003   |
+| NULL      | A00012    | NULL    | JP-0003   |
++-----------+-----------+---------+-----------+
+21 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q16 having
+MariaDB [cosmetics]> SELECT COUNT(ProductID), BrandID
+    -> FROM sunscreen
+    -> GROUP BY BrandID
+    -> HAVING COUNT(ProductID) > 3
+    -> ORDER BY COUNT(ProductID) DESC;
++------------------+---------+
+| COUNT(ProductID) | BrandID |
++------------------+---------+
+|                5 | JP-0001 |
+|                4 | JP-0003 |
++------------------+---------+
+2 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> --Q17 NOT EXIST
+MariaDB [cosmetics]> 
+MariaDB [cosmetics]> SELECT BrandID
+    -> FROM  liquid_foundation
+    -> WHERE NOT EXISTS 
+    ->       ( SELECT ProductName
+    ->         FROM brands
+    ->         WHERE price>2000 
+    ->       ); 
++---------+
+| BrandID |
++---------+
+| US-0001 |
+| FR-0001 |
+| JP-0001 |
+| JP-0001 |
++---------+
+4 rows in set (0.00 sec)
+
+MariaDB [cosmetics]> notee;
